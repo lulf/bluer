@@ -34,7 +34,9 @@ use crate::{
     adapter,
     adv::Advertisement,
     agent::{Agent, AgentHandle, RegisteredAgent},
-    all_dbus_objects, gatt, parent_path, Adapter, Error, ErrorKind, InternalErrorKind, Result, SERVICE_NAME,
+    all_dbus_objects, gatt,
+    mesh::network::Network,
+    parent_path, Adapter, Error, ErrorKind, InternalErrorKind, Result, SERVICE_NAME,
 };
 
 #[cfg(feature = "rfcomm")]
@@ -245,6 +247,11 @@ impl Session {
     /// Create an interface to the Bluetooth adapter with the specified name.
     pub fn adapter(&self, adapter_name: &str) -> Result<Adapter> {
         Adapter::new(self.inner.clone(), adapter_name)
+    }
+
+    /// Create an interface for the Bluetooth mesh network
+    pub fn mesh(&self) -> Result<Network> {
+        Network::new(self.inner.clone())
     }
 
     /// This registers a Bluetooth authorization agent handler.

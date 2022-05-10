@@ -528,6 +528,8 @@ pub mod rfcomm;
 mod session;
 mod sys;
 
+pub mod mesh;
+
 #[cfg(feature = "bluetoothd")]
 pub use crate::{adapter::*, device::*, session::*};
 

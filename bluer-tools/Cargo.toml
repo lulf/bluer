@@ -26,6 +26,10 @@ path = "src/l2cat.rs"
 name = "rfcat"
 path = "src/rfcat.rs"
 
+[[bin]]
+name = "mesh"
+path = "src/mesh.rs"
+
 [dependencies]
 bluer = { version = "0.15.0", path = "../bluer", features = ["full"] }
 futures = "0.3"
