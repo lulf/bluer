@@ -5,7 +5,10 @@ async fn main() -> Result<()> {
     env_logger::init();
     let session = bluer::Session::new().await?;
 
-    let mesh = session.mesh()?;
+    let mesh = session.mesh().await?;
+
+    mesh.application("/example").await?;
+
     mesh.print_dbus_objects().await?;
 
     let token = "26ea5cc2f46fd59d";
@@ -14,7 +17,7 @@ async fn main() -> Result<()> {
 
     //mesh.cancel().await?;
 
-    mesh.leave(token).await?;
+    //mesh.leave(token).await?;
 
     Ok(())
 }

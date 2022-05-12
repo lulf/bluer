@@ -36,6 +36,7 @@ use crate::{
     agent::{Agent, AgentHandle, RegisteredAgent},
     all_dbus_objects, gatt,
     mesh::network::Network,
+    mesh::application::Application,
     parent_path, Adapter, Error, ErrorKind, InternalErrorKind, Result, SERVICE_NAME,
 };
 
@@ -55,6 +56,7 @@ pub(crate) struct SessionInner {
     pub gatt_reg_characteristic_descriptor_token: IfaceToken<Arc<gatt::local::RegisteredDescriptor>>,
     pub gatt_profile_token: IfaceToken<gatt::local::Profile>,
     pub agent_token: IfaceToken<Arc<RegisteredAgent>>,
+    pub application_token: IfaceToken<Arc<Application>>,
     #[cfg(feature = "rfcomm")]
     pub profile_token: IfaceToken<Arc<RegisteredProfile>>,
     pub single_sessions: Mutex<HashMap<dbus::Path<'static>, SingleSessionTerm>>,
@@ -173,6 +175,7 @@ impl Session {
         let agent_token = RegisteredAgent::register_interface(&mut crossroads);
         #[cfg(feature = "rfcomm")]
         let profile_token = RegisteredProfile::register_interface(&mut crossroads);
+        let application_token = Application::register_interface(&mut crossroads);
 
         let (event_sub_tx, event_sub_rx) = mpsc::channel(1);
         Event::handle_connection(connection.clone(), event_sub_rx).await?;
@@ -186,6 +189,7 @@ impl Session {
             gatt_reg_characteristic_descriptor_token,
             gatt_profile_token,
             agent_token,
+            application_token,
             #[cfg(feature = "rfcomm")]
             profile_token,
             single_sessions: Mutex::new(HashMap::new()),
@@ -250,8 +254,8 @@ impl Session {
     }
 
     /// Create an interface for the Bluetooth mesh network
-    pub fn mesh(&self) -> Result<Network> {
-        Network::new(self.inner.clone())
+    pub async fn mesh(&self) -> Result<Network> {
+        Network::new(self.inner.clone()).await
     }
 
     /// This registers a Bluetooth authorization agent handler.

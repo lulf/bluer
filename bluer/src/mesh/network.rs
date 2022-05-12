@@ -1,4 +1,4 @@
-//! Implement Network interface
+//! Implement Network bluetooth mesh interface
 
 use crate::{Error, ErrorKind, InternalErrorKind};
 use crate::{Result, SessionInner};
@@ -9,29 +9,46 @@ use dbus::{
     Path,
 };
 
-use crate::mesh::{all_dbus_objects, SERVICE_NAME, TIMEOUT};
+use crate::mesh::{all_dbus_objects, SERVICE_NAME, PATH, TIMEOUT, application::Application};
+
+//use std::collections::HashMap;
 
 pub(crate) const INTERFACE: &str = "org.bluez.mesh.Network1";
-pub(crate) const PATH: &str = "/org/bluez/mesh";
 
-/// Interface to a Bluetooth adapter.
-#[cfg_attr(docsrs, doc(cfg(feature = "bluetoothd")))]
+/// Interface to a Bluetooth mesh network.
 #[derive(Clone)]
 pub struct Network {
     inner: Arc<SessionInner>,
 }
 
 impl Network {
-    pub(crate) fn new(inner: Arc<SessionInner>) -> Result<Self> {
-        Ok(Self { inner })
+    pub(crate) async fn new(inner: Arc<SessionInner>) -> Result<Self> {
+        Ok(Self {
+            inner,
+        })
     }
 
     fn proxy(&self) -> Proxy<'_, &SyncConnection> {
         Proxy::new(SERVICE_NAME, PATH, TIMEOUT, &*self.inner.connection)
     }
 
+    /// Create mesh application
+    pub async fn application(&self, path: &str) -> Result<()> {
+
+        let app = Application::new(self.inner.clone(), path);
+
+        let _res = app.register(self.inner.clone()).await?;
+
+        Ok(())
+    }
+
     /// Temprorary debug method to print the state of mesh
     pub async fn print_dbus_objects(&self) -> Result<()> {
+
+        // let proxy = Proxy::new("org.bluez.mesh", "/", TIMEOUT, &*self.inner.connection);
+        // let (x,): (HashMap<dbus::Path<'static>, HashMap<String, PropMap>>,) = proxy.method_call("org.freedesktop.DBus.ObjectManager", "GetManagedObjects", ()).await.unwrap();
+        // println!("om {:?}", x);
+
         for (path, interfaces) in all_dbus_objects(&*self.inner.connection).await? {
             println!("{}", path);
             for (interface, _props) in interfaces {
