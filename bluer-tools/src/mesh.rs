@@ -7,7 +7,7 @@ async fn main() -> Result<()> {
 
     let mesh = session.mesh().await?;
 
-    mesh.application("/example").await?;
+    let _app = mesh.application("/example").await?;
 
     mesh.print_dbus_objects().await?;
 

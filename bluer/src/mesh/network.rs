@@ -10,6 +10,7 @@ use dbus::{
 };
 
 use crate::mesh::{all_dbus_objects, SERVICE_NAME, PATH, TIMEOUT, application::Application};
+use crate::mesh::application::ApplicationHandle;
 
 //use std::collections::HashMap;
 
@@ -33,13 +34,11 @@ impl Network {
     }
 
     /// Create mesh application
-    pub async fn application(&self, path: &str) -> Result<()> {
+    pub async fn application(&self, path: &str) -> Result<ApplicationHandle> {
 
         let app = Application::new(self.inner.clone(), path);
 
-        let _res = app.register(self.inner.clone()).await?;
-
-        Ok(())
+        app.register(self.inner.clone()).await
     }
 
     /// Temprorary debug method to print the state of mesh
