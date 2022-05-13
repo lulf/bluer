@@ -1,3 +1,6 @@
+use tokio::time::{sleep, Duration};
+use uuid::Uuid;
+
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[tokio::main(flavor = "current_thread")]
@@ -10,6 +13,9 @@ async fn main() -> Result<()> {
     let _app = mesh.application("/example").await?;
 
     mesh.print_dbus_objects().await?;
+
+    // mesh.join("/example", Uuid::new_v4()).await?;
+
 
     let token = "26ea5cc2f46fd59d";
 
