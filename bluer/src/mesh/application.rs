@@ -51,28 +51,34 @@ impl Application {
                 })
             });
             cr_property!(ib, "CompanyID", _reg => {
-                Some(0x05f1)
+                Some(0x05f1 as u16)
             });
             cr_property!(ib, "ProductID", _reg => {
-                Some(0x0001)
+                Some(0x0001 as u16)
             });
             cr_property!(ib, "VersionID", _reg => {
-                Some(0x0001)
+                Some(0x0001 as u16)
             });
         })
     }
 
     pub(crate) async fn register(self, inner: Arc<SessionInner>) -> Result<ApplicationHandle> {
-        let app_path = dbus::Path::new(self.path.clone()).unwrap();
+        let root_path = dbus::Path::new(self.path.clone()).unwrap();
 
         {
             let mut cr = inner.crossroads.lock().await;
+
             let om = cr.object_manager();
-            cr.insert(app_path.clone(), &[inner.application_token, om], Arc::new(self));
+            cr.insert(root_path.clone(), &[om], ());
+
+            let app_path = format!("{}/{}", &root_path, "application");
+            let app_path = dbus::Path::new(app_path).unwrap();
+
+            cr.insert(app_path, &[inner.application_token], Arc::new(self));
         }
 
         let (drop_tx, drop_rx) = oneshot::channel();
-        let path_unreg = app_path.clone();
+        let path_unreg = root_path.clone();
         tokio::spawn(async move {
             let _ = drop_rx.await;
 
@@ -81,7 +87,7 @@ impl Application {
             let _: Option<Self> = cr.remove(&path_unreg);
         });
 
-        Ok(ApplicationHandle { name: app_path, _drop_tx: drop_tx })
+        Ok(ApplicationHandle { name: root_path, _drop_tx: drop_tx })
     }
 
 }
