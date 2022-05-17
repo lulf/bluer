@@ -9,7 +9,7 @@ use dbus::{
     Path,
 };
 
-use crate::mesh::{all_dbus_objects, SERVICE_NAME, PATH, TIMEOUT, application::Application};
+use crate::mesh::{all_dbus_objects, SERVICE_NAME, PATH, TIMEOUT, application::{Application, RegisteredApplication}};
 use crate::mesh::application::ApplicationHandle;
 use uuid::Uuid;
 
@@ -35,11 +35,11 @@ impl Network {
     }
 
     /// Create mesh application
-    pub async fn application(&self, path: &str) -> Result<ApplicationHandle> {
+    pub async fn application(&self, app: Application) -> Result<ApplicationHandle> {
 
-        let app = Application::new(self.inner.clone(), path);
+        let reg = RegisteredApplication::new(self.inner.clone(), app);
 
-        app.register(self.inner.clone()).await
+        reg.register(self.inner.clone()).await
     }
 
     /// Temprorary debug method to print the state of mesh

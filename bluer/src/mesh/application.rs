@@ -11,21 +11,35 @@ use dbus_crossroads::{Crossroads, IfaceBuilder, IfaceToken};
 use crate::mesh::{SERVICE_NAME, PATH, TIMEOUT};
 use futures::{channel::oneshot,};
 use std::fmt;
+use crate::mesh::Element;
 
 pub(crate) const INTERFACE: &str = "org.bluez.mesh.Application1";
 
-/// Interface to a Bluetooth mesh network interface.
+/// Definition of mesh application.
 #[derive(Clone)]
 pub struct Application {
-    inner: Arc<SessionInner>,
-    path: String,
+    /// Application path
+    pub path: String,
+    /// Application elements
+    pub elements: Vec<Element>,
 }
 
-impl Application {
-    pub(crate) fn new(inner: Arc<SessionInner>, path: &str) -> Self {
+// ---------------
+// D-Bus interface
+// ---------------
+
+/// A service exposed over D-Bus to bluez.
+#[derive(Clone)]
+pub struct RegisteredApplication {
+    inner: Arc<SessionInner>,
+    app: Application,
+}
+
+impl RegisteredApplication {
+    pub(crate) fn new(inner: Arc<SessionInner>, app: Application) -> Self {
         Self {
             inner,
-            path: path.to_string(),
+            app,
         }
     }
 
@@ -63,7 +77,7 @@ impl Application {
     }
 
     pub(crate) async fn register(self, inner: Arc<SessionInner>) -> Result<ApplicationHandle> {
-        let root_path = dbus::Path::new(self.path.clone()).unwrap();
+        let root_path = dbus::Path::new(self.app.path.clone()).unwrap();
 
         {
             let mut cr = inner.crossroads.lock().await;
@@ -82,7 +96,7 @@ impl Application {
         tokio::spawn(async move {
             let _ = drop_rx.await;
 
-            log::trace!("Unpublishing profile at {}", &path_unreg);
+            log::trace!("Unpublishing application at {}", &path_unreg);
             let mut cr = inner.crossroads.lock().await;
             let _: Option<Self> = cr.remove(&path_unreg);
         });

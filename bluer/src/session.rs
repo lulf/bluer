@@ -36,7 +36,7 @@ use crate::{
     agent::{Agent, AgentHandle, RegisteredAgent},
     all_dbus_objects, gatt,
     mesh::network::Network,
-    mesh::application::Application,
+    mesh::application::RegisteredApplication,
     parent_path, Adapter, Error, ErrorKind, InternalErrorKind, Result, SERVICE_NAME,
 };
 
@@ -56,7 +56,7 @@ pub(crate) struct SessionInner {
     pub gatt_reg_characteristic_descriptor_token: IfaceToken<Arc<gatt::local::RegisteredDescriptor>>,
     pub gatt_profile_token: IfaceToken<gatt::local::Profile>,
     pub agent_token: IfaceToken<Arc<RegisteredAgent>>,
-    pub application_token: IfaceToken<Arc<Application>>,
+    pub application_token: IfaceToken<Arc<RegisteredApplication>>,
     #[cfg(feature = "rfcomm")]
     pub profile_token: IfaceToken<Arc<RegisteredProfile>>,
     pub single_sessions: Mutex<HashMap<dbus::Path<'static>, SingleSessionTerm>>,
@@ -175,7 +175,7 @@ impl Session {
         let agent_token = RegisteredAgent::register_interface(&mut crossroads);
         #[cfg(feature = "rfcomm")]
         let profile_token = RegisteredProfile::register_interface(&mut crossroads);
-        let application_token = Application::register_interface(&mut crossroads);
+        let application_token = RegisteredApplication::register_interface(&mut crossroads);
 
         let (event_sub_tx, event_sub_rx) = mpsc::channel(1);
         Event::handle_connection(connection.clone(), event_sub_rx).await?;

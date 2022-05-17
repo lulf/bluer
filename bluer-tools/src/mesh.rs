@@ -1,4 +1,8 @@
 //use uuid::Uuid;
+use bluer::mesh::{
+    application::Application,
+    Element, Model,
+};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -9,7 +13,43 @@ async fn main() -> Result<()> {
 
     let mesh = session.mesh().await?;
 
-    let _app = mesh.application("/example").await?;
+    let app = Application {
+        path: "/example".to_string(),
+        elements: vec![
+            Element {
+                models: vec![
+                    Model {
+                        id: 0x1000,
+                        vendor: 0xffff, //None
+                    },
+                    Model {
+                        id: 0x1100,
+                        vendor: 0xffff, //None
+                    }
+                ]
+            },
+            Element {
+                models: vec![
+                    Model {
+                        id: 0x1001,
+                        vendor: 0xffff, //None
+                    },
+                    Model {
+                        id: 0x1102,
+                        vendor: 0xffff, //None
+                    },
+                    Model {
+                        id: 0x0001,
+                        vendor: 0x05F1, // Linux Foundation Company ID
+                    }
+                ]
+            }
+        ],
+    };
+
+
+    //let _app = mesh.application("/example").await?;
+    let _app = mesh.application(app).await?;
 
     mesh.print_dbus_objects().await?;
 

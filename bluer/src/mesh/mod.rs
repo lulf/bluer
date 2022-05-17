@@ -24,3 +24,20 @@ async fn all_dbus_objects(
     let p = Proxy::new(SERVICE_NAME, "/", TIMEOUT, connection);
     Ok(p.get_managed_objects().await?)
 }
+
+
+/// Interface to a Bluetooth mesh element interface.
+#[derive(Clone)]
+pub struct Element {
+    /// Element models
+    pub models: Vec<Model>,
+}
+
+/// Interface to a Bluetooth mesh model interface.
+#[derive(Clone)]
+pub struct Model {
+    /// Model id
+    pub id: u16,
+    /// Model vendor
+    pub vendor: u16,
+}
