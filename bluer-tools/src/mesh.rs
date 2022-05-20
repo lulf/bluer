@@ -1,10 +1,20 @@
 //use uuid::Uuid;
-use bluer::mesh::{
-    application::Application,
-    Element, Model,
-};
+use bluer::mesh::{application::Application, Element, Model};
+use std::io;
+use std::io::prelude::*;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+/// Temp function to examine the program
+fn pause() {
+    let mut stdin = io::stdin();
+    let mut stdout = io::stdout();
+
+    write!(stdout, "Press any key to continue...").unwrap();
+    stdout.flush().unwrap();
+
+    let _ = stdin.read(&mut [0u8]).unwrap();
+}
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
@@ -25,8 +35,12 @@ async fn main() -> Result<()> {
                     Model {
                         id: 0x1100,
                         vendor: 0xffff, //None
-                    }
-                ]
+                    },
+                    Model {
+                        id: 0x0001,
+                        vendor: 0x05F1, // Linux Foundation Company ID
+                    },
+                ],
             },
             Element {
                 models: vec![
@@ -38,23 +52,16 @@ async fn main() -> Result<()> {
                         id: 0x1102,
                         vendor: 0xffff, //None
                     },
-                    Model {
-                        id: 0x0001,
-                        vendor: 0x05F1, // Linux Foundation Company ID
-                    }
-                ]
-            }
+                ],
+            },
         ],
     };
 
-
-    //let _app = mesh.application("/example").await?;
     let _app = mesh.application(app).await?;
 
     mesh.print_dbus_objects().await?;
 
-    // mesh.join("/example", Uuid::new_v4()).await?;
-
+    //mesh.join("/example", Uuid::new_v4()).await?;
 
     let token = "26ea5cc2f46fd59d";
 
@@ -63,6 +70,8 @@ async fn main() -> Result<()> {
     //mesh.cancel().await?;
 
     //mesh.leave(token).await?;
+
+    pause();
 
     Ok(())
 }

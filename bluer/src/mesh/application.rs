@@ -11,7 +11,8 @@ use dbus_crossroads::{Crossroads, IfaceBuilder, IfaceToken};
 use crate::mesh::{SERVICE_NAME, PATH, TIMEOUT};
 use futures::{channel::oneshot,};
 use std::fmt;
-use crate::mesh::Element;
+use crate::mesh::{Element, RegisteredElement};
+use std::mem::take;
 
 pub(crate) const INTERFACE: &str = "org.bluez.mesh.Application1";
 
@@ -76,11 +77,13 @@ impl RegisteredApplication {
         })
     }
 
-    pub(crate) async fn register(self, inner: Arc<SessionInner>) -> Result<ApplicationHandle> {
+    pub(crate) async fn register(mut self, inner: Arc<SessionInner>) -> Result<ApplicationHandle> {
         let root_path = dbus::Path::new(self.app.path.clone()).unwrap();
 
         {
             let mut cr = inner.crossroads.lock().await;
+
+            let elements = take(&mut self.app.elements);
 
             let om = cr.object_manager();
             cr.insert(root_path.clone(), &[om], ());
@@ -89,6 +92,19 @@ impl RegisteredApplication {
             let app_path = dbus::Path::new(app_path).unwrap();
 
             cr.insert(app_path, &[inner.application_token], Arc::new(self));
+
+            for (element_idx, element) in elements.into_iter().enumerate() {
+                let reg_element = RegisteredElement::new(inner.clone(), element, element_idx as u8);
+
+                let id = format!("{:02}", element_idx);
+
+                let element_path = format!("{}/ele{}", &root_path, id);
+                let element_path = dbus::Path::new(element_path).unwrap();
+                log::trace!("Publishing element at {}", &element_path);
+                //TODO register and remove all paths ... reg_paths.push(element_path.clone());
+                cr.insert(element_path.clone(), &[inner.element_token], Arc::new(reg_element));
+
+            }
         }
 
         let (drop_tx, drop_rx) = oneshot::channel();

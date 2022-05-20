@@ -75,6 +75,7 @@ impl Network {
             Path::new(path).map_err(|_| Error::new(ErrorKind::Internal(InternalErrorKind::InvalidValue)))?;
 
         self.call_method("Attach", (path_value, token_int)).await
+        // TODO Handle return value
     }
 
     /// Cancel provisioning request
