@@ -1,9 +1,19 @@
-//use uuid::Uuid;
+//! Join a BLE mesh
+
+// use uuid::Uuid;
 use bluer::mesh::{application::Application, Element, Model};
+use clap::Parser;
 use std::io;
 use std::io::prelude::*;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    token: String,
+}
 
 /// Temp function to examine the program
 fn pause() {
@@ -19,6 +29,7 @@ fn pause() {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
     env_logger::init();
+    let args = Args::parse();
     let session = bluer::Session::new().await?;
 
     let mesh = session.mesh().await?;
@@ -63,9 +74,7 @@ async fn main() -> Result<()> {
 
     //mesh.join("/example", Uuid::new_v4()).await?;
 
-    let token = "26ea5cc2f46fd59d";
-
-    mesh.attach("/example", token).await?;
+    mesh.attach("/example", &args.token).await?;
 
     //mesh.cancel().await?;
 
