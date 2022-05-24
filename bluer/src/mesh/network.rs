@@ -12,8 +12,7 @@ use dbus::{
 use crate::mesh::{all_dbus_objects, SERVICE_NAME, PATH, TIMEOUT, application::{Application, RegisteredApplication}};
 use crate::mesh::application::ApplicationHandle;
 use uuid::Uuid;
-
-//use std::collections::HashMap;
+use crate::mesh::ElementConfig;
 
 pub(crate) const INTERFACE: &str = "org.bluez.mesh.Network1";
 
@@ -74,8 +73,15 @@ impl Network {
         let path_value =
             Path::new(path).map_err(|_| Error::new(ErrorKind::Internal(InternalErrorKind::InvalidValue)))?;
 
-        self.call_method("Attach", (path_value, token_int)).await
-        // TODO Handle return value
+
+        let (node, config): (Path, Vec<(u8, Vec<(u16, ElementConfig)>)>)
+            = self.call_method("Attach", (path_value, token_int)).await?;
+
+        log::info!("Attached app to {:?} with elements config {:?}", node, config);
+
+
+        // TODO configure elements and get node object
+        Ok(())
     }
 
     /// Cancel provisioning request

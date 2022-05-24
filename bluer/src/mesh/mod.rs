@@ -29,6 +29,7 @@ async fn all_dbus_objects(
     Ok(p.get_managed_objects().await?)
 }
 
+type ElementConfig = HashMap<String, Variant<Box<dyn RefArg  + 'static>>>;
 
 /// Interface to a Bluetooth mesh element interface.
 #[derive(Clone, Debug)]
@@ -67,7 +68,7 @@ impl RegisteredElement {
                 Some(reg.index)
             });
             cr_property!(ib, "Models", reg => {
-                let mut mt: Vec<(u16, HashMap<String, Variant<Box<dyn RefArg  + 'static>>>)> = vec![];
+                let mut mt: Vec<(u16, ElementConfig)> = vec![];
                 // TODO rewrite
                 for model in &reg.element.models {
                     if model.vendor == 0xffff {
@@ -78,7 +79,7 @@ impl RegisteredElement {
                 Some(mt)
             });
             cr_property!(ib, "VendorModels", reg => {
-                let mut mt: Vec<(u16, u16, HashMap<String, Variant<Box<dyn RefArg  + 'static>>>)> = vec![];
+                let mut mt: Vec<(u16, u16, ElementConfig)> = vec![];
                 for model in &reg.element.models {
                     if model.vendor != 0xffff {
                         mt.push((model.vendor, model.id, HashMap::new()));
