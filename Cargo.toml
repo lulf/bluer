@@ -3,3 +3,8 @@ members = [
     "bluer",
     "bluer-tools",
 ]
+
+[patch.crates-io]
+embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "de7dd59fa9553a1a6b75ff09238c9529277b95e7" }
+drogue-device = { path = "../drogue-iot/drogue-device/device" }
+#drogue-device = {git = "https://github.com/drogue-iot/drogue-device.git", rev = "b70ee0a691ed6a7ea8b424bd1a16279beebe1042" }

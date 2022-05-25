@@ -3,21 +3,16 @@
 use crate::{method_call, Result, SessionInner};
 use std::sync::Arc;
 
-use dbus::{
-    nonblock::{Proxy, SyncConnection},
-};
+use dbus::nonblock::{Proxy, SyncConnection};
 use dbus_crossroads::{Crossroads, IfaceBuilder, IfaceToken};
 
-use crate::mesh::{SERVICE_NAME, PATH, TIMEOUT};
-use futures::{channel::oneshot,};
-use std::fmt;
-use crate::mesh::{Element, RegisteredElement};
-use std::mem::take;
+use crate::mesh::{Element, RegisteredElement, PATH, SERVICE_NAME, TIMEOUT};
+use futures::channel::oneshot;
+use std::{fmt, mem::take};
 
 pub(crate) const INTERFACE: &str = "org.bluez.mesh.Application1";
 
 /// Definition of mesh application.
-#[derive(Clone)]
 pub struct Application {
     /// Application path
     pub path: String,
@@ -30,7 +25,6 @@ pub struct Application {
 // ---------------
 
 /// A service exposed over D-Bus to bluez.
-#[derive(Clone)]
 pub struct RegisteredApplication {
     inner: Arc<SessionInner>,
     app: Application,
@@ -38,10 +32,7 @@ pub struct RegisteredApplication {
 
 impl RegisteredApplication {
     pub(crate) fn new(inner: Arc<SessionInner>, app: Application) -> Self {
-        Self {
-            inner,
-            app,
-        }
+        Self { inner, app }
     }
 
     fn proxy(&self) -> Proxy<'_, &SyncConnection> {
@@ -103,7 +94,6 @@ impl RegisteredApplication {
                 log::trace!("Publishing element at {}", &element_path);
                 //TODO register and remove all paths ... reg_paths.push(element_path.clone());
                 cr.insert(element_path.clone(), &[inner.element_token], Arc::new(reg_element));
-
             }
         }
 
@@ -119,7 +109,6 @@ impl RegisteredApplication {
 
         Ok(ApplicationHandle { name: root_path, _drop_tx: drop_tx })
     }
-
 }
 
 /// Handle to Application

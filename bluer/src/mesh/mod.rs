@@ -1,19 +1,18 @@
 //! Bluetooth Mesh module
 
-pub mod network;
 pub mod application;
+pub mod network;
+mod types;
+pub use types::*;
 
-use dbus::nonblock::stdintf::org_freedesktop_dbus::ObjectManager;
+use crate::{Result, SessionInner};
 use dbus::{
     arg::{PropMap, RefArg, Variant},
-    nonblock::{Proxy, SyncConnection},
+    nonblock::{stdintf::org_freedesktop_dbus::ObjectManager, Proxy, SyncConnection},
     Path,
 };
-use std::collections::HashMap;
-use std::time::Duration;
-use std::sync::Arc;
 use dbus_crossroads::{Crossroads, IfaceBuilder, IfaceToken};
-use crate::{Result, SessionInner};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 pub(crate) const SERVICE_NAME: &str = "org.bluez.mesh";
 pub(crate) const PATH: &str = "/org/bluez/mesh";
@@ -29,17 +28,16 @@ async fn all_dbus_objects(
     Ok(p.get_managed_objects().await?)
 }
 
-type ElementConfig = HashMap<String, Variant<Box<dyn RefArg  + 'static>>>;
+type ElementConfig = HashMap<String, Variant<Box<dyn RefArg + 'static>>>;
 
 /// Interface to a Bluetooth mesh element interface.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Element {
     /// Element models
-    pub models: Vec<Model>,
+    pub models: Vec<Box<dyn Model>>,
 }
 
 /// An element exposed over D-Bus to bluez.
-#[derive(Clone)]
 pub struct RegisteredElement {
     inner: Arc<SessionInner>,
     element: Element,
@@ -48,11 +46,7 @@ pub struct RegisteredElement {
 
 impl RegisteredElement {
     pub(crate) fn new(inner: Arc<SessionInner>, element: Element, index: u8) -> Self {
-        Self {
-            inner,
-            element,
-            index,
-        }
+        Self { inner, element, index }
     }
 
     fn proxy(&self) -> Proxy<'_, &SyncConnection> {
@@ -71,9 +65,9 @@ impl RegisteredElement {
                 let mut mt: Vec<(u16, ElementConfig)> = vec![];
                 // TODO rewrite
                 for model in &reg.element.models {
-                    if model.vendor == 0xffff {
+                    if let ModelIdentifier::SIG(id) = model.identifier() {
                         // TODO what about opts?
-                        mt.push((model.id, HashMap::new()));
+                        mt.push((id, HashMap::new()));
                     }
                 }
                 Some(mt)
@@ -81,21 +75,12 @@ impl RegisteredElement {
             cr_property!(ib, "VendorModels", reg => {
                 let mut mt: Vec<(u16, u16, ElementConfig)> = vec![];
                 for model in &reg.element.models {
-                    if model.vendor != 0xffff {
-                        mt.push((model.vendor, model.id, HashMap::new()));
+                    if let ModelIdentifier::Vendor(vid, id) = model.identifier() {
+                        mt.push((vid.0, id, HashMap::new()));
                     }
                 }
                 Some(mt)
             });
         })
     }
-}
-
-/// Interface to a Bluetooth mesh model interface.
-#[derive(Clone, Debug)]
-pub struct Model {
-    /// Model id
-    pub id: u16,
-    /// Model vendor
-    pub vendor: u16,
 }
